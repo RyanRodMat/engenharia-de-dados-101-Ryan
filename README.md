@@ -70,9 +70,7 @@ engenharia-de-dados-101/
 │   ├── verificar_etl_reverso.py
 │   ├── app.py
 │   ├── database.sqlite         # gerado por você ao rodar etl_reverso.py (não vem pronto)
-│   ├── dev_criar_banco.py      # (dev) cria database.sqlite com as tabelas vazias
-│   ├── dev_popular_dummy.py    # (dev) popula database.sqlite com dados fictícios
-│   └── dev_limpar_banco.py     # (dev) limpa os dados das tabelas de database.sqlite
+│   └── dev_cli.py              # (dev) CLI: criar / popular / limpar database.sqlite
 │
 ├── docs/
 │   └── GUIA_DO_ALUNO.md        # passo a passo completo

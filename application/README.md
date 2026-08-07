@@ -37,9 +37,7 @@ projeto.
 | `app.py`                          | não          | App Streamlit completo, lê `database.sqlite` e monta o relatório     |
 | `verificar_etl_reverso.py`        | não          | Confere se a carga em `database.sqlite` está correta                 |
 | `database.sqlite`                 | *(gerado)*   | Criado por você ao rodar `etl_reverso.py` — não existe até lá        |
-| `dev_criar_banco.py`              | não          | *(fora do exercício)* cria `database.sqlite` com as tabelas vazias   |
-| `dev_popular_dummy.py`            | não          | *(fora do exercício)* popula `database.sqlite` com dados fictícios   |
-| `dev_limpar_banco.py`             | não          | *(fora do exercício)* apaga só os DADOS das tabelas de `database.sqlite` |
+| `dev_cli.py`                      | não          | *(fora do exercício)* CLI com comandos `criar`/`popular`/`limpar` para `database.sqlite` |
 
 ## O que fazer
 
@@ -70,17 +68,20 @@ projeto.
 
 ## Ferramentas de desenvolvimento (fora do exercício)
 
-Três scripts auxiliares, úteis pra quem está desenvolvendo/revisando o
-projeto -- não fazem parte do que o aluno precisa entregar:
+`dev_cli.py` é um CLI com três comandos, útil pra quem está
+desenvolvendo/revisando o projeto -- não faz parte do que o aluno
+precisa entregar:
 
-- `python application/dev_criar_banco.py` — cria `database.sqlite` com
-  as 4 tabelas vazias (schema pronto, sem dados).
-- `python application/dev_popular_dummy.py` — (re)cria o banco e
-  popula as tabelas com dados fictícios (sem passar pelo pipeline), pra
-  testar `app.py` rapidamente.
-- `python application/dev_limpar_banco.py` — limpa os DADOS das
-  tabelas (`DELETE FROM`), mantendo o arquivo e o schema intactos. Para
-  apagar o banco por completo, apague `database.sqlite` diretamente.
+```bash
+python application/dev_cli.py criar     # cria database.sqlite com as 4 tabelas vazias
+python application/dev_cli.py popular   # (re)cria o banco e insere dados fictícios
+python application/dev_cli.py limpar    # apaga os DADOS das tabelas (mantém arquivo/schema)
+python application/dev_cli.py --help    # lista os comandos
+```
+
+`popular` é útil pra testar `app.py` rapidamente sem passar pelo
+pipeline. `limpar` só roda `DELETE FROM` em cada tabela -- para apagar o
+banco por completo, apague `database.sqlite` diretamente.
 
 ## Tabelas esperadas em `database.sqlite`
 
