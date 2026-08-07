@@ -1,0 +1,24 @@
+# Ambiente Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Saídas geradas pelos alunos em cada camada (o exercício é gerá-las de novo)
+lakehouse/bronze/saida/*.csv
+lakehouse/silver/saida/*.csv
+lakehouse/gold/saida/*.csv
+!lakehouse/bronze/saida/.gitkeep
+!lakehouse/silver/saida/.gitkeep
+!lakehouse/gold/saida/.gitkeep
+
+# Banco gerado pelo exercício de ETL reverso (application/etl_reverso.py)
+application/database.sqlite
+
+# Streamlit
+.streamlit/
+
+# SO / editor
+.DS_Store
+.vscode/
