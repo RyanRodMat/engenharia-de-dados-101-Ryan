@@ -48,51 +48,57 @@ DT_INGESTAO = datetime.now(timezone.utc).isoformat()
 
 
 def ler_vendas_csv() -> list[dict]:
-    """
-    Lê lakehouse/landing/vendas.csv e devolve uma lista de dicionários, um por linha,
-    EXATAMENTE como está no arquivo (não converta tipos, não filtre nada).
+    try:
+        with open(LANDING / "vendas.csv", newline="", encoding="utf-8") as arquivo:
+            ler = csv.DictReader(arquivo)
+            return list(ler)
+    except FileNotFoundError:
+        print("Arquivo não encontrado.")
+        return []
+    except Exception as error:
+        print(f"Erro ao ler vendas.csv: {error}")
+        return []
 
-    Dica: use csv.DictReader.
-    """
-    # TODO: implemente a leitura do arquivo lakehouse/landing/vendas.csv
-    raise NotImplementedError("Implemente ler_vendas_csv()")
 
 
 def ler_clientes_json() -> list[dict]:
-    """
-    Lê lakehouse/landing/clientes.json e devolve a lista de dicionários já presente
-    no arquivo. Alguns registros podem ter campos faltando (ex.: sem
-    "data_cadastro") ou campos extras (ex.: "telefone") -- não se preocupe
-    com isso agora, apenas carregue o JSON como ele é.
-
-    Dica: use json.load(). Repare que nem todo registro tem as mesmas
-    chaves -- isso é esperado na bronze.
-    """
-    # TODO: implemente a leitura do arquivo lakehouse/landing/clientes.json
-    raise NotImplementedError("Implemente ler_clientes_json()")
+    try:
+        with open(LANDING / "clientes.json", "r", encoding="utf-8") as arquivo:
+            return json.load(arquivo)
+    except FileNotFoundError:
+        print("Arquivo não encontrado.")
+        return []
+    except Exception as error:
+        print(f"Erro ao ler clientes.json: {error}")
+        return []
 
 
 def ler_produtos_txt() -> list[dict]:
-    """
-    Lê lakehouse/landing/produtos.txt, um arquivo texto delimitado por "|", e
-    devolve uma lista de dicionários com as chaves:
-        id_produto, nome, categoria, preco, ativo
+    try:
+        with open(LANDING / "produtos.txt", "r", encoding="utf-8") as arquivo:
+            linhas = arquivo.readlines()
 
-    Regras de leitura (isso IS parte da ingestão bronze, pois é sobre
-    "como ler o formato", não sobre "corrigir o conteúdo"):
-      - Linhas que começam com "#" são comentários -> ignore.
-      - Linhas em branco -> ignore.
-      - A primeira linha "de verdade" (não comentário, não em branco) é o
-        cabeçalho: "id_produto|nome|categoria|preco|ativo" -> use-a para
-        nomear as colunas, não a inclua como dado.
-      - Todas as demais linhas são dados: separe por "|" e monte o dicionário.
+        registros = []
+        cabecalho = None
 
-    Dica: abra o arquivo, itere linha a linha com .readlines() ou iterando
-    o próprio arquivo, use .strip() para remover a quebra de linha e
-    .split("|") para separar os campos.
-    """
-    # TODO: implemente a leitura do arquivo lakehouse/landing/produtos.txt
-    raise NotImplementedError("Implemente ler_produtos_txt()")
+        for linha in linhas:
+            linha = linha.strip()
+            if not linha or linha.startswith("#"):
+                continue  # Ignora linhas em branco e comentários
+            if cabecalho is None:
+                cabecalho = linha.split("|")  # Define o cabeçalho
+                continue
+            valores = linha.split("|")
+            registro = dict(zip(cabecalho, valores))
+            registros.append(registro)
+
+        return registros
+    except FileNotFoundError:
+        print("Arquivo não encontrado.")
+        return []
+    except Exception as error:
+        print(f"Erro ao ler produtos.txt: {error}")
+        return []
 
 
 def adicionar_metadados(registros: list[dict], nome_arquivo: str) -> list[dict]:
