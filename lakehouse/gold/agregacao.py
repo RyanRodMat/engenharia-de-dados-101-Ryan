@@ -1,47 +1,3 @@
-"""
-agregacao.py - Camada GOLD
-============================
-
-OBJETIVO DESTA CAMADA
-----------------------
-A camada gold entrega dados prontos para consumo de negócio: agregações,
-métricas, coisas que alguém da área comercial ia querer olhar num
-dashboard. Aqui você não lê mais a landing nem a bronze -- só a silver,
-que já está limpa.
-
-Entrada:  lakehouse/silver/saida/*.csv
-Saída:    lakehouse/gold/saida/resumo_vendas_categoria.csv
-          lakehouse/gold/saida/vendas_por_mes.csv
-          lakehouse/gold/saida/top_clientes.csv
-          lakehouse/gold/saida/resumo_geral.csv
-
-O que cada arquivo de saída deve conter:
-
-  resumo_vendas_categoria.csv
-      colunas: categoria, quantidade_vendida, valor_total
-      -> uma linha por categoria de produto (junte vendas com produtos
-         pelo id_produto), somando quantidade e valor_total.
-
-  vendas_por_mes.csv
-      colunas: mes, quantidade_vendas, valor_total
-      -> uma linha por mês (formato "AAAA-MM", extraído de data_venda),
-         com o número de vendas (linhas) e a soma de valor_total.
-
-  top_clientes.csv
-      colunas: id_cliente, nome, valor_total
-      -> os 10 clientes que mais gastaram (junte vendas com clientes),
-         ORDENADOS do maior para o menor valor_total.
-
-  resumo_geral.csv
-      colunas: total_vendas, valor_total_geral, ticket_medio
-      -> UMA única linha com: número total de vendas, soma de todos os
-         valor_total, e o ticket médio (valor_total_geral / total_vendas,
-         arredondado para 2 casas decimais).
-
-Dica: como não usamos pandas, some e agrupe "na mão" com dicionários,
-por exemplo: um dict {categoria: {"quantidade": 0, "valor_total": 0.0}}
-que você vai incrementando conforme percorre as vendas.
-"""
 
 import csv
 from collections import defaultdict
@@ -66,28 +22,87 @@ def salvar_csv(registros: list[dict], caminho_saida: Path, colunas: list[str]) -
             escritor.writerow({coluna: registro.get(coluna, "") for coluna in colunas})
 
 
-def calcular_resumo_por_categoria(vendas: list[dict], produtos: list[dict]) -> list[dict]:
-    """Uma linha por categoria: quantidade_vendida e valor_total somados."""
-    # TODO: implemente
-    raise NotImplementedError("Implemente calcular_resumo_por_categoria()")
+def calcular_resumo_por_categoria(vendas: list[dict], produtos: list[dict]) -> list[dict]: #essa aq foi difícil deu erro umas 3 vezes
+    produto_para_categoria = {
+        produto["id_produto"]: produto["categoria"]
+        for produto in produtos
+    }
+
+    resumo_por_categoria = defaultdict(
+        lambda: {
+            "quantidade_vendida": 0,
+            "valor_total": 0.0
+        }
+    )
+
+    for venda in vendas:
+        id_produto = venda["id_produto"]
+        categoria = produto_para_categoria[id_produto]
+
+        resumo_por_categoria[categoria]["quantidade_vendida"] += int(
+            venda["quantidade"]
+        )
+        resumo_por_categoria[categoria]["valor_total"] += float(
+            venda["valor_total"]
+        )
+
+    resultado = []
+
+    for categoria, dados in resumo_por_categoria.items():
+        resultado.append({
+            "categoria": categoria,
+            "quantidade_vendida": dados["quantidade_vendida"],
+            "valor_total": dados["valor_total"]
+        })
+
+    return resultado
+
+
 
 
 def calcular_vendas_por_mes(vendas: list[dict]) -> list[dict]:
-    """Uma linha por mês (AAAA-MM): quantidade_vendas e valor_total somados."""
-    # TODO: implemente
-    raise NotImplementedError("Implemente calcular_vendas_por_mes()")
+    vendas_por_mes = defaultdict(lambda: {"quantidade_vendas": 0, "valor_total": 0.0})
+    for venda in vendas:
+        mes = venda["data_venda"][:7]  
+        vendas_por_mes[mes]["quantidade_vendas"] += 1
+        vendas_por_mes[mes]["valor_total"] += float(venda["valor_total"])
+
+    resultado = []
+    for mes, dados in vendas_por_mes.items():
+        resultado.append({
+            "mes": mes,
+            "quantidade_vendas": dados["quantidade_vendas"],
+            "valor_total": dados["valor_total"]
+        })
+    return resultado
 
 
 def calcular_top_clientes(vendas: list[dict], clientes: list[dict], top_n: int = 10) -> list[dict]:
-    """Os top_n clientes que mais gastaram, ordenados do maior para o menor."""
-    # TODO: implemente
-    raise NotImplementedError("Implemente calcular_top_clientes()")
+    top_clientes = defaultdict(lambda: {"nome": "", "valor_total": 0.0})
+    for cliente in clientes:
+        top_clientes[cliente["id_cliente"]]["nome"] = cliente["nome"]
+    for venda in vendas:
+        id_cliente = venda["id_cliente"]
+        top_clientes[id_cliente]["valor_total"] += float(venda["valor_total"])
+    resultado = sorted(#mao estava conseguindo fazer e precisei da ajuda do amigo claudinho, mas acho que entendi o conceito
+        [{"id_cliente": id_cliente, "nome": dados["nome"], "valor_total": dados["valor_total"]}
+         for id_cliente, dados in top_clientes.items()],
+        key=lambda x: x["valor_total"],
+        reverse=True
+    )
+    return resultado[:top_n]
 
 
 def calcular_resumo_geral(vendas: list[dict]) -> list[dict]:
-    """Uma única linha: total_vendas, valor_total_geral, ticket_medio."""
-    # TODO: implemente
-    raise NotImplementedError("Implemente calcular_resumo_geral()")
+    total_vendas = len(vendas)
+    valor_total_geral = sum(float(venda["valor_total"]) for venda in vendas)
+    ticket_medio = round(valor_total_geral / total_vendas, 2) if total_vendas > 0 else 0.0
+    return [{
+        "total_vendas": total_vendas,
+        "valor_total_geral": valor_total_geral,
+        "ticket_medio": ticket_medio
+    }]
+
 
 
 def main() -> None:
